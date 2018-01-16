@@ -1,0 +1,23 @@
+{
+  "name": "nypinsights",
+  "version": "1.0.0",
+  "description": "NYP-Telegram bot coded in Node.js",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MatchaCat/NYPTelegram.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MatchaCat/NYPTelegram/issues"
+  },
+  "homepage": "https://github.com/MatchaCat/NYPTelegram#readme",
+  "dependencies": {
+    "dotenv": "^4.0.0",
+    "telegram-node-bot": "^4.0.5"
+  }
+}
