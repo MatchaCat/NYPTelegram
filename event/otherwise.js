@@ -1,13 +1,11 @@
-'use strict'
-//requirements
-const Telegram = require('telegram-node-bot')
-const TelegramBaseController = Telegram.TelegramBaseController
+'use strict';
 
-class OtherwiseController extends TelegramBaseController {
+const Telegram = require('telegram-node-bot');
 
-    handle($) {
-        console.log('Otherwise prompted.')
-    }
+class OtherwiseController extends Telegram.TelegramBaseController{
+  handle($){
+    $.sendMessage('Sorry, I don\'t understand. Perhaps You can use the command /help to show you the way');
+  }
 }
 
-module.exports = OtherwiseController
+module.exports = OtherwiseController;

@@ -31,7 +31,7 @@ class Student extends Nyp {
         //search with telegram id, retrieve other info
         //create student object
         //if nothing retrieved, do something
-        var an = "999999Z"
+        var an = "150606Z"
         return an
     }
 }

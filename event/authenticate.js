@@ -18,10 +18,10 @@ class AuthController extends TelegramBaseController {
                 error: 'Oh no, something went wrong. Please enter your admin number again.',
                 validator: (message, callback) => {
                     if(this.adminNumberValidator(message.text) == true) {
-                        tgid = $.message.from.id
+                        tgid = $
                         an = message.text
                         console.log('Admin Number: ' + an)
-                        console.log('Telegram ID: ' + tgid)
+                        console.log($.update.message.text)
                         callback(true, message.text) //you must pass the result also
                         return
                     }
@@ -35,6 +35,7 @@ class AuthController extends TelegramBaseController {
                 validator: (message, callback) => {
                     if(message.text == 'Firstphase') { //check with nosql server on verification code
                         //create account in sql database
+                        console.log($.update.message.text)
                         callback(true, message.text)
                         return
                     }
