@@ -3,16 +3,24 @@
 const Telegram = require('telegram-node-bot')
 const Authenticate = require('./authenticate')
 const Student = require('../model/student')
+const kvController = require('../controller/kv')
+const bluebird = require('bluebird');
 
 //initialise object
 const TelegramBaseController = Telegram.TelegramBaseController
 const AuthCall = new Authenticate()
+var kv = new kvController()
 
 var guestCheck = null
 
 class StartController extends TelegramBaseController {
 
     start($) {
+        
+        var kvArr = kv.kvCollection('credentials/azure/')
+        kvArr.then(function (kvObj){
+            return kvArr
+        })
 
         var accountGranted = ""
         const Stud = new Student($)

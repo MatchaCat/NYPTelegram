@@ -3,21 +3,22 @@
 const Telegram = require('telegram-node-bot');
 var Connection = require('tedious').Connection; 
 var Request = require('tedious').Request; 
-
+var dotenv = require('dotenv').config();
 var aes256 = require('aes256');
-
+var text2png = require('text2png');
+var watermark = require('dynamic-watermark');
+var fs = require('fs');
 var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://152287U:TelegramBot12345@nyp-telegram-shard-00-00-kqhli.mongodb.net:27017,nyp-telegram-shard-00-01-kqhli.mongodb.net:27017,nyp-telegram-shard-00-02-kqhli.mongodb.net:27017/NYP-Telegram?ssl=true&replicaSet=NYP-Telegram-shard-0&authSource=admin";
-
-var config = { 
-    userName: "Telegram", 
-    password: "Bot12345", 
-    server: "nyp-telegram.database.windows.net", 
-    options: { 
-        database: "NYP_TELEGRAM", 
-        encrypt: true, 
-    } 
-}; 
+var url = process.env.MONGODB_CONNECTION_STRING;
+var config = {
+    userName: process.env.AZURE_CONNECTION_CONFIG_USERNAME,
+    password: process.env.AZURE_CONNECTION_CONFIG_PASSWORD,
+    server: process.env.AZURE_CONNECTION_CONFIG_SERVER,
+    options: {
+        database: process.env.AZURE_CONNECTION_CONFIG_DB,
+        encrypt: true,
+    }
+}
 
 class ResultController extends Telegram.TelegramBaseController {
 
@@ -122,12 +123,12 @@ module.exports = ResultController;
 
 function getAllSem($,connection,semresult,key){
     let mainText = '*Your Results for all Sememsters:*';
-    let year1Sem1 = '\n\n*Year 1 Sem 1:*\n';
-    let year1Sem2 = '\n\n*Year 1 Sem 2:*\n';
-    let year2Sem1 = '\n\n*Year 2 Sem 1:*\n';
-    let year2Sem2 = '\n\n*Year 2 Sem 2:*\n';
-    let year3Sem1 = '\n\n*Year 3 Sem 1:*\n';
-    let year3Sem2 = '\n\n*Year 3 Sem 2:*\n';
+    let year1Sem1 = '\n\nYear 1 Sem 1:\n';
+    let year1Sem2 = '\n\nYear 1 Sem 2:\n';
+    let year2Sem1 = '\n\nYear 2 Sem 1:\n';
+    let year2Sem2 = '\n\nYear 2 Sem 2:\n';
+    let year3Sem1 = '\n\nYear 3 Sem 1:\n';
+    let year3Sem2 = '\n\nYear 3 Sem 2:\n';
     let accumulatedGpa = '\n Your Accumlated GPA is '
     var totalCreditMulPoint = 0;
     var totalModuleCredit = 0;
@@ -147,22 +148,22 @@ function getAllSem($,connection,semresult,key){
                 //console.log(x);
                 switch (x) {
                     case "11":
-                        year1Sem1+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year1Sem1+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "12":
-                        year1Sem2+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year1Sem2+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "21":
-                        year2Sem1+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year2Sem1+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "22":
-                        year2Sem2+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year2Sem2+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "31":
-                        year3Sem1+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year3Sem1+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "32":
-                        year3Sem2+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year3Sem2+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     default:
                         console.log("No year or sem is similar as stated in DB");
@@ -177,7 +178,9 @@ function getAllSem($,connection,semresult,key){
             console.log(totalCreditMulPoint+' MULPOINT')
             console.log(totalModuleCredit+' module credit')
             accumulatedGpa+= `*`+(totalCreditMulPoint/totalModuleCredit).toFixed(2)+`*`;
-            $.sendMessage(mainText +  year1Sem1 +  year1Sem2 +  year2Sem1 +  year2Sem2 +  year3Sem1 +  year3Sem2 + accumulatedGpa, { parse_mode: 'Markdown' });
+            var resulttext = mainText +  year1Sem1 +  year1Sem2 +  year2Sem1 +  year2Sem2 +  year3Sem1 +  year3Sem2 + accumulatedGpa;
+            //$.sendMessage(mainText +  year1Sem1 +  year1Sem2 +  year2Sem1 +  year2Sem2 +  year3Sem1 +  year3Sem2 + accumulatedGpa, { parse_mode: 'Markdown' });
+            watermarkResult($,resulttext,1);
         }
     }); 
          
@@ -218,22 +221,22 @@ function getSelectedSemResult($,connection,semresult,year,sem,key){
                 console.log(x);
                 switch (x) {
                     case "11":
-                        year1Sem1+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year1Sem1+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "12":
-                        year1Sem2+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year1Sem2+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "21":
-                        year2Sem1+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year2Sem1+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "22":
-                        year2Sem2+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year2Sem2+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "31":
-                        year3Sem1+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year3Sem1+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     case "32":
-                        year3Sem2+=  `${decryptedSub} - *${decryptedGrade}*\n`;
+                        year3Sem2+=  `${decryptedSub} - ${decryptedGrade}\n`;
                         break;
                     default:
                         console.log("No year or sem is similar as stated in DB");
@@ -246,7 +249,9 @@ function getSelectedSemResult($,connection,semresult,year,sem,key){
             console.log(totalCreditMulPoint)
             console.log(totalModuleCredit)
             accumulatedGpa+= `*`+(totalCreditMulPoint/totalModuleCredit).toFixed(2)+`*`;
-            $.sendMessage(`\n\n*Year `+ item["Year"] + ` Sem `+ item["Sem"] +`*:\n` + year1Sem1 +  year1Sem2 +  year2Sem1 +  year2Sem2 +  year3Sem1 +  year3Sem2 + accumulatedGpa, { parse_mode: 'Markdown' });
+            var resulttext = `Year `+ item["Year"] + ` Sem `+ item["Sem"] +`:\n` + year1Sem1 +  year1Sem2 +  year2Sem1 +  year2Sem2 +  year3Sem1 +  year3Sem2 + accumulatedGpa
+            // /$.sendMessage(`\n\n*Year `+ item["Year"] + ` Sem `+ item["Sem"] +`*:\n` + year1Sem1 +  year1Sem2 +  year2Sem1 +  year2Sem2 +  year3Sem1 +  year3Sem2 + accumulatedGpa, { parse_mode: 'Markdown' });
+            watermarkResult($,resulttext,0);
         }
     }); 
          
@@ -259,4 +264,35 @@ function getSelectedSemResult($,connection,semresult,year,sem,key){
 
             });
         connection.execSql(request);
+}
+
+function watermarkResult($,resulttext,value){
+    if (value = 1){
+        var fontDetail = '35px sans-serif'
+    }
+    else{
+        var fontDetail = '5px sans-serif'
+    }
+    try {
+        fs.writeFileSync('Result.png', text2png(resulttext, {
+            font: fontDetail,
+            textColor: 'black',
+            lineSpacing: 10,
+            padding:20
+        }));
+        var options = {
+            source : "nyp-logo-Result.png",
+            logo: "Result.png", // This is optional if you have provided text Watermark
+            destination: "Result.png",
+            position: "center",    // left-top, left-bottom, right-top, right-bottom
+            type: "image",   // text or image
+        }
+        watermark.embed(options, function(status) {
+            //Do what you want to do here
+            console.log(status);
+            $.sendPhoto({ path: 'Result.png'})
+        })
+    } catch (e) {
+        console.log("Cannot write file ", e);
+    }
 }

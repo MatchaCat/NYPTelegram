@@ -2,6 +2,8 @@
 //requirements
 require('dotenv').config()
 const Telegram = require('telegram-node-bot')
+const kvController = require('./controller/kv')
+const bluebird = require('bluebird');
 
 //EUGENE'S CONTROLLERS ----------------------------------------
 const StartController = require('./event/start'),
@@ -11,7 +13,12 @@ const StartController = require('./event/start'),
 
 //initialise object
 const TelegramBaseController = Telegram.TelegramBaseController
-const tg = new Telegram.Telegram(process.env.TELEGRAM_BOT_KEY, {workers: 1})
+var kv = bluebird.promisifyAll(new kvController())
+
+var tgKey = kv.kvRetrieve(process.env.TELEGRAM_BOT_KEY)
+var tg = tgKey.then(function (tgKey){
+    return new Telegram.Telegram(tgKey.Value, {workers: 1})
+})
 
 //api controllers
 const TextCommand = Telegram.TextCommand
@@ -30,7 +37,8 @@ const mediaCtrl = new MediaController();
 const helpdeskCtrl = new HelpDeskController();
 //-------------------------------------------------------------
 
-tg.router
+tg.then(function(tg){
+    tg.router
     //general services
     .when(new TextCommand('/start', 'startHandler'), new StartController())
     .when(new TextCommand('/help', 'helpHandler'), new HelpController())
@@ -44,5 +52,5 @@ tg.router
     .when(new Telegram.TextCommand('/helpdesk', 'helpDeskCommand'), helpdeskCtrl)
     //default error handling services
     .otherwise(new OtherwiseController())
-
+})
 //tg.addScopeExtension()

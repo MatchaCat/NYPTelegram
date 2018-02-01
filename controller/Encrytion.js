@@ -3,6 +3,7 @@
 // console.log(randomisedString)
 
 var aes256 = require('aes256');
+var dotenv = require('dotenv').config();
 
 // var key = randomisedString;
 // var plaintext = '152287U';
@@ -14,25 +15,24 @@ var aes256 = require('aes256');
 // console.log(decrypted);
 
 
-
-var MongoClient = require('mongodb').MongoClient;
-var url = "mongodb://152287U:TelegramBot12345@nyp-telegram-shard-00-00-kqhli.mongodb.net:27017,nyp-telegram-shard-00-01-kqhli.mongodb.net:27017,nyp-telegram-shard-00-02-kqhli.mongodb.net:27017/NYP-Telegram?ssl=true&replicaSet=NYP-Telegram-shard-0&authSource=admin";
-
-var key = "h4Xz8MVGimfSvG7vkCfushbx7O67Xazw";
-
-
 var Connection = require('tedious').Connection; 
 var Request = require('tedious').Request; 
 var TYPES = require('tedious').TYPES;
-var config = { 
-    userName: "Telegram", 
-    password: "Bot12345", 
-    server: "nyp-telegram.database.windows.net", 
-    options: { 
-        database: "NYP_TELEGRAM", 
-        encrypt: true, 
-    } 
-}; 
+var MongoClient = require('mongodb').MongoClient;
+var url = process.env.MONGODB_CONNECTION_STRING;
+var config = {
+    userName: process.env.AZURE_CONNECTION_CONFIG_USERNAME,
+    password: process.env.AZURE_CONNECTION_CONFIG_PASSWORD,
+    server: process.env.AZURE_CONNECTION_CONFIG_SERVER,
+    options: {
+        database: process.env.AZURE_CONNECTION_CONFIG_DB,
+        encrypt: true,
+    }
+}
+var key = "h4Xz8MVGimfSvG7vkCfushbx7O67Xazw";
+
+
+
 
 // MongoClient.connect(url, function(err, client) {
 //     if (err) throw err;
@@ -107,6 +107,9 @@ var config = {
 //         });
 // }
 
+
+//CCA
+//===
 var connection = new Connection(config); 
 connection.on("connect",function(err){ 
     var semresult =[];

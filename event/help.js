@@ -2,15 +2,20 @@
 //requirements
 const Telegram = require('telegram-node-bot')
 const Student = require('../model/student')
+const kvController = require('../controller/kv')
+const bluebird = require('bluebird');
 
 //initialise object
 const TelegramBaseController = Telegram.TelegramBaseController
-//const General = new Gencon()
+var kv = bluebird.promisifyAll(new kvController())
 
 class HelpController extends TelegramBaseController {
     
     help($) {
-
+        // var kvObj = kv.kvRetrieve('credentials/telegram/telegram_bot_key')
+        // kvObj.then(function (kvObj){
+        //     return kvObj.Value
+        // })
         const Stud = new Student($)
         console.log('Help condition check: ' + Stud.adminnumber)
         if (Stud.adminnumber == "999999Z" | Stud.adminnumber == null){
