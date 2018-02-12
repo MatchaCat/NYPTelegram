@@ -1,0 +1,2 @@
+consul kv put credentials/telegram/telegram_bot_key 514162673:AAGhWysc9YbOkr8Hxc2pjnX630szyR8nw0g
+consul kv put credentials/azure/azure_connection_config eugenejiacheng/P@ssw0rd/nyptelegram.database.windows.net/NYP_TELEGRAM

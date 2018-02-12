@@ -14,29 +14,29 @@ class kvController {
         return jsonObj
     }
 
-    kvCollection(relativepath){
-        var jsonArr = consul.kv.keys(relativepath)
-        
-        var jsonKeyArr = jsonArr.then((res) => {
-            var stringKV = JSON.stringify(res)
-            console.log('kvCollection Array --> ' + stringKV)
-            var jsonObj = JSON.parse(stringKV)
-            console.log('kvCollection Object --> ' + jsonObj)
-            var jsonKeyArr = jsonObj.toString().split(',')
-            console.log('This is how after separation look like --> ' + jsonKeyArr)
-            return jsonKeyArr
-        })
-        
-        jsonKeyArr.then((res) => {
-            var jsonValueCollection = []
-            for (var i = 0, len = res.length; i < len; i++) {
-                jsonValueCollection.push(this.kvRetrieve(res[i]))
-                console.log('Individual jsonValueCollection item pushed --> ' + jsonValueCollection[i])
+    kvSet(key, value, callback){
+        var session = ""
+        var phaseOne = consul.session.create()
+        var phaseTwo = phaseOne.then((result) =>{
+            var sSession = JSON.stringify(result)
+            session = JSON.parse(sSession)
+            return
+        }, (err) =>{console.log('KV session creation error --> ' + err)})
+        var phaseThree = phaseTwo.then((res) =>{
+            return consul.kv.set(key, value, {acquire: session.ID})
+        }, (err) =>{console.log('Unable to set key:value properly --> ' + err)})
+        var phaseFour = phaseThree.then((res) =>{
+            return consul.kv.set(key, value, {release: session.ID})
+        }, (err) =>{console.log('Release error: --> ' + err)})
+        // var phaseFive = phaseFour.then((res) =>{
+        //     return consul.session.destroy(session.ID)
+        // }, (err) =>{console.log('Session don\'t want to let go: --> ' + err)})
+        var phaseFive= phaseFour.then((res) =>{
+            if (res){
+                console.log("KV PUT SUCCESS ----------------")
+                callback(true)
             }
-            return jsonValueCollection
         })
-        console.log('This is how the end jsonValueCollection look like -->\n\n' + jsonValueCollection)
-        return jsonValueCollection
     }
 }
 

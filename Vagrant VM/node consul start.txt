@@ -1,0 +1,14 @@
+#Node A
+consul agent -server -bootstrap-expect=3 -data-dir=/tmp/consul -node=nodea -bind=172.20.20.11 -enable-script-checks=true -config-dir=/etc/consul.d
+
+#Node B
+consul agent -server -bootstrap-expect=3 -data-dir=/tmp/consul -node=nodeb -bind=172.20.20.12 -enable-script-checks=true -config-dir=/etc/consul.d
+
+#Node C
+consul agent -server -bootstrap-expect=3 -data-dir=/tmp/consul -node=nodec -bind=172.20.20.13 -enable-script-checks=true -config-dir=/etc/consul.d
+
+#Node Join (Consul Members) - Check for cluster leader
+consul join 172.20.20.11 172.20.20.12 172.20.20.13
+
+#Connect to Internet with Ngrok
+vagrant share <server ip>

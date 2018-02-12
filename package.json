@@ -17,7 +17,23 @@
   },
   "homepage": "https://github.com/MatchaCat/NYPTelegram#readme",
   "dependencies": {
+    "aes256": "^1.0.3",
+    "bluebird": "^3.5.1",
+    "consul": "^0.30.0",
+    "delay": "^2.0.0",
     "dotenv": "^4.0.0",
-    "telegram-node-bot": "^4.0.5"
+    "dynamic-watermark": "0.0.5",
+    "gm": "^1.23.1",
+    "instagram-node": "^0.5.8",
+    "mongodb": "^3.0.2",
+    "nodemailer": "^4.4.2",
+    "randomstring": "^1.1.5",
+    "rapidapi-connect": "0.0.6",
+    "speakeasy": "^2.0.0",
+    "steganographie": "0.0.1",
+    "tedious": "^2.3.1",
+    "telegram-node-bot": "^4.0.5",
+    "text2png": "^1.0.1",
+    "validator": "^9.4.0"
   }
 }

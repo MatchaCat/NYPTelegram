@@ -1,74 +1,117 @@
 var Connection = require('tedious').Connection
 var Request = require('tedious').Request
-var KeyVault = require('azure-keyvault')
-var AuthenticationContext = require('adal-node').AuthenticationContext
- 
-var clientId = "<to-be-filled>"
-var clientSecret = "<to-be-filled>"
-var vaultUri = "<to-be-filled>"
- 
-// Authenticator - retrieves the access token 
-var authenticator = function (challenge, callback) {
- 
-  // Create a new authentication context. 
-  var context = new AuthenticationContext(challenge.authorization);
-  
-  // Use the context to acquire an authentication token. 
-  return context.acquireTokenWithClientCredentials(challenge.resource, clientId, clientSecret, function (err, tokenResponse) {
-    if (err) throw err;
-    // Calculate the value to be set in the request's Authorization header and resume the call. 
-    var authorizationValue = tokenResponse.tokenType + ' ' + tokenResponse.accessToken;
- 
-    return callback(null, authorizationValue);
-  });
- 
-};
+var kvController = require('../controller/kv')
+var bluebird = require('bluebird');
 
-// Create connection to database
-var config = 
-   {
-     userName: 'someuser', // update me
-     password: 'somepassword', // update me
-     server: 'edmacasqlserver.database.windows.net', // update me
-     options: 
+var kv = new kvController()
+
+class Database {
+
+  getConfig(){
+    
+    // Create connection to database
+    var configList = kv.kvRetrieve(process.env.AZURE_CONNECTION)
+    var configReq = configList.then((res) => {
+      console.log(res.Value.split("/"))
+      return res.Value.split("/")
+    })
+
+    var config = configReq.then((configReq) => {
+      return {
+        userName: configReq[0],
+        password: configReq[1],
+        server: configReq[2],
+        options: 
+            {
+              database: configReq[3],
+              encrypt: true
+            }
+      }
+    })
+    return config
+  }
+
+  async queryDatabase(connection, table, keyword, condition, callback){
+    console.log('Reading row(s) from the Table...')
+    
+    let queriedObjectinString = ""
+    // Read all rows from table
+    var querystring = "SELECT * FROM " + table + " WHERE " + keyword + "='" + condition + "'"
+
+    var request = new Request(querystring, function(err){
+        console.log(queriedObjectinString.slice(0, -1))
+        callback(queriedObjectinString.slice(0, -1))
+    })
+
+    request.on('row', function(columns) {
+          columns.forEach(function(column) {
+            console.log("%s\t%s", column.metadata.colName, column.value)
+            queriedObjectinString += column.value + "/"
+          })
+        })
+    connection.execSql(request)
+  }
+
+  alterDatabaseinC(connection, table, values){
+    console.log('Writing entries into the Table...')
+    
+    let queryExecutionCheck = false
+
+    console.log( "Values: --> " + values.toString());
+
+    // Write rows into table
+    var querystring = "INSERT INTO " + table + " VALUES (" + values.toString()  + ")"
+
+    var request = new Request(
+      querystring,
+      function(err, rowCount, rows) 
         {
-           database: 'somedb' //update me
-           , encrypt: true
-        }
-   }
-var connection = new Connection(config);
+          queryExecutionCheck = true
 
-// Attempt to connect and execute queries if connection goes through
-connection.on('connect', function(err) 
-   {
-     if (err) 
-       {
-          console.log(err)
-       }
-    else
-       {
-           queryDatabase()
-       }
-   }
- );
+          console.log(rowCount + ' row(s) affected.')
+        })
+    connection.execSql(request)
+    return queryExecutionCheck
+  }
 
-function queryDatabase()
-   { console.log('Reading rows from the Table...');
+  alterDatabaseinU(connection, table, column, value, keyword, condition){
+    console.log('Updating entries in the Table...')
+    // cvConcar puts matching elements of column array and value array together
 
-       // Read all rows from table
-     request = new Request(
-          "SELECT TOP 20 pc.Name as CategoryName, p.name as ProductName FROM [SalesLT].[ProductCategory] pc JOIN [SalesLT].[Product] p ON pc.productcategoryid = p.productcategoryid",
-             function(err, rowCount, rows) 
-                {
-                    console.log(rowCount + ' row(s) returned');
-                    process.exit();
-                }
-            );
+    let queryExecutionCheck = false
+    // Edit rows in table
+    var querystring = "UPDATE " + table + " SET " + cvConcar + " WHERE " + keyword + "='" + condition + "'"
 
-     request.on('row', function(columns) {
-        columns.forEach(function(column) {
-            console.log("%s\t%s", column.metadata.colName, column.value);
-         });
-             });
-     connection.execSql(request);
-   }
+    var request = new Request(
+      querystring,
+      function(err, rowCount, rows) 
+        {
+          queryExecutionCheck = true
+
+          console.log(rowCount + ' row(s) deleted.')
+        })
+    connection.execSql(request)
+    return queryExecutionCheck
+  }
+
+  alterDatabaseinD(connection, table, keyword, condition){
+    console.log('Deleting entries from the Table...')
+    
+    let queryExecutionCheck = false
+    // Remove rows from table
+    var querystring = "DELETE FROM " + table + " WHERE " + keyword + "='" + condition + "'"
+
+    var request = new Request(
+      querystring,
+      function(err, rowCount, rows) 
+        {
+          queryExecutionCheck = true
+
+          console.log(rowCount + ' row(s) deleted.')
+        })
+    connection.execSql(request)
+    return queryExecutionCheck
+  }
+}
+
+module.exports = Database
